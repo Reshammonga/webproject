@@ -1,0 +1,166 @@
+using System;
+using System.Data.SqlClient;
+
+class DigitalDiary
+{
+    static string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=diary;Integrated Security=True";
+
+    static void Main()
+    {
+        bool running = true;
+        while (running)
+        {
+            Console.Clear();
+            Console.WriteLine("This is your Digital Diary : ");
+            Console.WriteLine("1. Enter Entry");
+            Console.WriteLine("2. View Entry");
+            Console.WriteLine("3. Search Entries");
+            Console.WriteLine("4. Delete Entry");
+            Console.WriteLine("5. Exit");
+            Console.Write("Select an option: ");
+
+            switch (Console.ReadLine())
+            {
+                case "1":
+                    AddEntry();
+                    break;
+                case "2":
+                    ViewEntry();
+                    break;
+                case "3":
+                    Search();
+                    break;
+                case "4":
+                    Delete();
+                    break;
+                case "5":
+                    running = false;
+                    break;
+                default:
+                    Console.WriteLine("Invalid option, please choose from gifven options.");
+                    break;
+            }
+            Console.WriteLine("Press any key to return to the menu...");
+            Console.ReadKey(); 
+            Console.WriteLine();
+        }
+        Console.WriteLine("Thank you for using your Digital Diary. Goodbye!");
+    }
+
+    static void AddEntry()
+    {
+        Console.Write("Enter Date (YYYY-MM-DD) : ");
+        DateTime date = DateTime.Parse(Console.ReadLine());
+
+        Console.Write("Enter Title : ");
+        string title = Console.ReadLine();
+
+        Console.Write("Enter Content : ");
+        string content = Console.ReadLine();
+
+        Console.Write("Enter Category : ");
+        string category = Console.ReadLine();
+
+        using (SqlConnection conn = new SqlConnection(connectionString))
+        {
+            conn.Open();
+            string query = "INSERT INTO diaryentry (Date, Title, Content, Category) VALUES (@Date, @Title, @Content, @Category)";
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@Date", date);
+                cmd.Parameters.AddWithValue("@Title", title);
+                cmd.Parameters.AddWithValue("@Content", content);
+                cmd.Parameters.AddWithValue("@Category", category);
+                cmd.ExecuteNonQuery();
+                Console.WriteLine("Entry added successfully!");
+            }
+           
+        }
+
+    }
+
+    static void ViewEntry()
+    {
+        Console.Write("Enter Date (YYYY-MM-DD): ");
+        DateTime date = DateTime.Parse(Console.ReadLine());
+
+        using (SqlConnection conn = new SqlConnection(connectionString))
+        {
+            conn.Open();
+            string query = "SELECT * FROM diaryentry WHERE Date = @Date";
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@Date", date);
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        Console.WriteLine($"\nID: {reader["ID"]}");
+                        Console.WriteLine($"Date: {reader["Date"]}");
+                        Console.WriteLine($"Title: {reader["Title"]}");
+                        Console.WriteLine($"Category: {reader["Category"]}");
+                        Console.WriteLine($"Content: {reader["Content"]}\n");
+                    }
+                }
+            }
+        }
+  
+    }
+
+  
+        static void Search()
+        {
+            Console.Write("Enter Category to Search: ");
+            string category = Console.ReadLine();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string query = "SELECT * FROM diaryentry WHERE Category = @Category";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Category", category);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (!reader.HasRows)
+                        {
+                            Console.WriteLine("No entries found.");
+                        }
+                        else
+                        {
+                            while (reader.Read())
+                            {
+                                Console.WriteLine($"\nID: {reader["ID"]}");
+                                Console.WriteLine($"Date: {reader["Date"]}");
+                                Console.WriteLine($"Title: {reader["Title"]}");
+                                Console.WriteLine($"Category: {reader["Category"]}");
+                                Console.WriteLine($"Content: {reader["Content"]}");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    
+    static void Delete()
+    {
+        Console.Write("Enter Entry ID to Delete: ");
+        int id = int.Parse(Console.ReadLine());
+
+        using (SqlConnection conn = new SqlConnection(connectionString))
+        {
+            conn.Open();
+            string query = "DELETE FROM diaryentry WHERE ID = @ID";
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@ID", id);
+                cmd.ExecuteNonQuery();
+                Console.WriteLine("Entry deleted successfully!");
+            }
+        }
+     
+    }
+
+   
+}
